@@ -2,7 +2,10 @@ name: Build APK
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
+      - 'claude/flutter-product-location-test-8xd35n'
     tags:
       - 'v*'
   pull_request:
@@ -49,14 +52,27 @@ jobs:
           name: mapa-prateleiras-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
+      # ── Resolve release tag ───────────────────────────────────────────────
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.version }}" != "" ]]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/heads/main || "$GITHUB_REF" == refs/heads/master || "$GITHUB_REF" == "refs/heads/claude/flutter-product-location-test-8xd35n" ]]; then
+            echo "value=v1.0.0" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
+
       # ── GitHub Release ────────────────────────────────────────────────────
-      # Runs when the commit is tagged (v*) OR when manually triggered with a version.
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.version != '')
+        if: steps.tag.outputs.value != ''
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.version }}
-          name: Mapa de Prateleiras ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.version }}
+          tag_name: ${{ steps.tag.outputs.value }}
+          name: Mapa de Prateleiras ${{ steps.tag.outputs.value }}
           body: |
             ## Mapa de Prateleiras
 
@@ -64,7 +80,7 @@ jobs:
 
             ### Instalação
             1. Baixe o arquivo `mapa-prateleiras.apk`
-            2. Habilite "Fontes desconhecidas" nas configurações do Android
+            2. Habilite **Fontes desconhecidas** nas configurações do Android
             3. Abra o arquivo para instalar
           files: build/app/outputs/flutter-apk/app-release.apk
           token: ${{ secrets.GITHUB_TOKEN }}
