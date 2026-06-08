@@ -128,9 +128,9 @@ class _HomePageState extends State<HomePage> {
                   onReset: _resetSelection,
                 ),
                 const SizedBox(height: 16),
-                SizedBox(height: constraints.maxHeight * 0.56, child: map),
-                const SizedBox(height: 16),
                 ProductInfoCard(product: _selectedProduct?.copyWith(x: _effectiveX, y: _effectiveY)),
+                const SizedBox(height: 16),
+                SizedBox(height: constraints.maxHeight * 0.56, child: map),
                 const SizedBox(height: 16),
                 EditorPanel(
                   product: _selectedProduct,
